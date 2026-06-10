@@ -28,7 +28,7 @@ export const guessCommand: Command = {
       const output = isProxyNotConfiguredError
         ? `ERROR      ${message}\nSet KOMANTLE_PROXY_BASE_URL in constants.ts`
         : KomantleApi.getMode() === 'real' && !isWordRequiredError
-        ? `ERROR      ${message}\nTry: api test`
+        ? `ERROR      ${message}\nCheck proxy configuration.`
         : `ERROR      ${message}`;
 
       return {

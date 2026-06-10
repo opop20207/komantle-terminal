@@ -1,12 +1,12 @@
 :root {
   color-scheme: dark;
-  --terminal-background: #020402;
-  --terminal-foreground: #39ff7a;
-  --terminal-muted: #179c45;
-  --terminal-glow: rgba(57, 255, 122, 0.22);
-  --terminal-vignette: rgba(0, 0, 0, 0.38);
-  --terminal-selection: rgba(57, 255, 122, 0.28);
-  --terminal-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --terminal-background: #000000;
+  --terminal-foreground: #c0c0c0;
+  --terminal-foreground-strong: #f2f2f2;
+  --terminal-muted: #8a8a8a;
+  --terminal-selection: #f0f0f0;
+  --terminal-selection-text: #000000;
+  --terminal-font: Consolas, "Lucida Console", "Courier New", monospace;
 }
 
 * {
@@ -29,4 +29,5 @@ body {
 
 ::selection {
   background: var(--terminal-selection);
+  color: var(--terminal-selection-text);
 }

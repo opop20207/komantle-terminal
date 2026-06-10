@@ -8,10 +8,6 @@ const commandDescriptions = [
   ['rank', 'Show all guessed words sorted by similarity'],
   ['top', 'Show top 10 guessed words'],
   ['find [word]', 'Find a previous guess'],
-  ['api', 'Show API mode'],
-  ['api mock', 'Switch to mock API mode'],
-  ['api real', 'Switch to real API mode'],
-  ['api test', 'Test real API connectivity'],
   ['reset', 'Clear all stored data'],
 ];
 

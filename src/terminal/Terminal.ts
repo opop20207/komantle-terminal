@@ -1,4 +1,3 @@
-import { apiCommand } from '../commands/api';
 import { clearCommand } from '../commands/clear';
 import { findCommand } from '../commands/find';
 import { guessCommand } from '../commands/guess';
@@ -20,12 +19,11 @@ const commands: Command[] = [
   rankCommand,
   topCommand,
   findCommand,
-  apiCommand,
   guessCommand,
   resetCommand,
 ];
 
-const historyExcludedCommands = new Set(['help', 'history', 'rank', 'top', 'find', 'api', 'reset']);
+const historyExcludedCommands = new Set(['help', 'history', 'rank', 'top', 'find', 'reset']);
 
 export class Terminal {
   private readonly parser = new CommandParser();
@@ -82,11 +80,7 @@ export class Terminal {
     prompt.className = 'terminal-prompt';
     prompt.textContent = PROMPT;
 
-    const cursor = document.createElement('span');
-    cursor.className = 'terminal-cursor';
-    cursor.setAttribute('aria-hidden', 'true');
-
-    form.append(prompt, this.inputElement, cursor);
+    form.append(prompt, this.inputElement);
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       void this.runCurrentCommand();

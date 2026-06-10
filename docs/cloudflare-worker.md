@@ -21,19 +21,12 @@ The frontend will call:
 {KOMANTLE_PROXY_BASE_URL}/guess?day={day}&word={encodedWord}
 ```
 
-## Terminal Commands
+## Frontend Behavior
 
-Use these commands in the app:
-
-```text
-api       Show current API mode
-api mock  Switch to mock mode
-api real  Switch to real mode
-api test  Test the configured proxy endpoint
-```
-
-If `KOMANTLE_PROXY_BASE_URL` is empty, real mode will not attempt a request and
-will show:
+The terminal app no longer exposes API mode commands. Keep mock mode for normal
+frontend use unless the API integration is intentionally enabled in source code.
+If `KOMANTLE_PROXY_BASE_URL` is empty, real API calls should not be attempted and
+the app should show:
 
 ```text
 ERROR      proxy endpoint is not configured

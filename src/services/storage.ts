@@ -1,5 +1,4 @@
 import { STORAGE_KEYS } from '../constants';
-import { API_MODE } from '../constants';
 import type { ApiMode, GuessResult } from './komantleApi';
 
 export type AppStorageState = {
@@ -9,11 +8,12 @@ export type AppStorageState = {
 };
 
 const MAX_HISTORY_ITEMS = 100;
+const DEFAULT_API_MODE: ApiMode = 'mock';
 
 const createDefaultState = (): AppStorageState => ({
   commandHistory: [],
   guesses: [],
-  apiMode: API_MODE,
+  apiMode: DEFAULT_API_MODE,
 });
 
 const isGuessResult = (value: unknown): value is GuessResult => {
@@ -65,7 +65,7 @@ const normalizeGuesses = (guesses: unknown): GuessResult[] => {
 };
 
 const normalizeApiMode = (apiMode: unknown): ApiMode => {
-  return apiMode === 'real' || apiMode === 'mock' ? apiMode : API_MODE;
+  return apiMode === 'real' || apiMode === 'mock' ? apiMode : DEFAULT_API_MODE;
 };
 
 const isStorageStateShape = (value: unknown): value is AppStorageState => {
