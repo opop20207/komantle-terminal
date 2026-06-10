@@ -1,0 +1,32 @@
+:root {
+  color-scheme: dark;
+  --terminal-background: #020402;
+  --terminal-foreground: #39ff7a;
+  --terminal-muted: #179c45;
+  --terminal-glow: rgba(57, 255, 122, 0.22);
+  --terminal-vignette: rgba(0, 0, 0, 0.38);
+  --terminal-selection: rgba(57, 255, 122, 0.28);
+  --terminal-font: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--terminal-background);
+  color: var(--terminal-foreground);
+  font-family: var(--terminal-font);
+}
+
+::selection {
+  background: var(--terminal-selection);
+}

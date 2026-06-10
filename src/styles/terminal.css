@@ -1,0 +1,128 @@
+.terminal-shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100dvh;
+  padding: clamp(1rem, 3vw, 2rem);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, transparent 0, transparent 58%, var(--terminal-vignette) 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(57, 255, 122, 0.035) 0,
+      rgba(57, 255, 122, 0.035) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    var(--terminal-background);
+  color: var(--terminal-foreground);
+  text-shadow: 0 0 12px var(--terminal-glow);
+}
+
+.terminal-output {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.5rem;
+  scrollbar-color: var(--terminal-muted) transparent;
+}
+
+.terminal-output-block,
+.terminal-command-line,
+.terminal-input-row {
+  margin: 0 0 0.75rem;
+  font-family: var(--terminal-font);
+  font-size: clamp(0.95rem, 1.9vw, 1.08rem);
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+
+.terminal-output-block {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.terminal-output-banner {
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  white-space: pre;
+  font-size: clamp(0.46rem, 1.55vw, 0.95rem);
+  line-height: 1.18;
+}
+
+.terminal-command-line {
+  display: flex;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.terminal-input-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0;
+}
+
+.terminal-prompt {
+  color: var(--terminal-foreground);
+  font-weight: 700;
+}
+
+.terminal-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--terminal-foreground);
+  caret-color: var(--terminal-foreground);
+  font: inherit;
+  text-shadow: inherit;
+}
+
+.terminal-input:focus {
+  outline: none;
+}
+
+.terminal-cursor {
+  width: 0.65em;
+  height: 1.15em;
+  background: var(--terminal-foreground);
+  box-shadow: 0 0 14px var(--terminal-glow);
+  animation: cursor-blink 1s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .terminal-shell {
+    height: 100svh;
+    padding: 1rem;
+  }
+
+  .terminal-output-block,
+  .terminal-command-line,
+  .terminal-input-row {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .terminal-output-banner {
+    font-size: 0.46rem;
+  }
+}
