@@ -1,3 +1,4 @@
+import { apiCommand } from '../commands/api';
 import { clearCommand } from '../commands/clear';
 import { findCommand } from '../commands/find';
 import { guessCommand } from '../commands/guess';
@@ -19,11 +20,12 @@ const commands: Command[] = [
   rankCommand,
   topCommand,
   findCommand,
+  apiCommand,
   guessCommand,
   resetCommand,
 ];
 
-const historyExcludedCommands = new Set(['help', 'history', 'rank', 'top', 'find', 'reset']);
+const historyExcludedCommands = new Set(['help', 'history', 'rank', 'top', 'find', 'api', 'reset']);
 
 export class Terminal {
   private readonly parser = new CommandParser();

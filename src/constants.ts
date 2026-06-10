@@ -1,4 +1,5 @@
 export const PROMPT = 'C:\\Users\\komantle >';
+export const API_MODE: 'mock' | 'real' = 'mock';
 export const KOMANTLE_PROXY_BASE_URL = 'https://komantle-proxy.opop202077.workers.dev';
 export const WELCOME_BANNER = [
   'Microsoft Windows',
@@ -16,6 +17,7 @@ export const COMMAND_NAMES = [
   'rank',
   'top',
   'find',
+  'api',
   'guess',
   'reset',
 ] as const;

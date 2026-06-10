@@ -1,19 +1,25 @@
-import { STORAGE_KEYS } from '../constants';
+import { API_MODE, STORAGE_KEYS } from '../constants';
 import type { ApiMode, GuessResult } from './komantleApi';
+
+export type CurrentDayCache = {
+  day: number;
+  expiresAt: number;
+};
 
 export type AppStorageState = {
   commandHistory: string[];
   guesses: GuessResult[];
   apiMode: ApiMode;
+  currentDayCache: CurrentDayCache | null;
 };
 
 const MAX_HISTORY_ITEMS = 100;
-const DEFAULT_API_MODE: ApiMode = 'mock';
 
 const createDefaultState = (): AppStorageState => ({
   commandHistory: [],
   guesses: [],
-  apiMode: DEFAULT_API_MODE,
+  apiMode: API_MODE,
+  currentDayCache: null,
 });
 
 const isGuessResult = (value: unknown): value is GuessResult => {
@@ -65,7 +71,30 @@ const normalizeGuesses = (guesses: unknown): GuessResult[] => {
 };
 
 const normalizeApiMode = (apiMode: unknown): ApiMode => {
-  return apiMode === 'real' || apiMode === 'mock' ? apiMode : DEFAULT_API_MODE;
+  return apiMode === 'real' || apiMode === 'mock' ? apiMode : API_MODE;
+};
+
+const normalizeCurrentDayCache = (cache: unknown): CurrentDayCache | null => {
+  if (!cache || typeof cache !== 'object') {
+    return null;
+  }
+
+  const candidate = cache as Record<string, unknown>;
+
+  if (
+    typeof candidate.day !== 'number'
+    || !Number.isInteger(candidate.day)
+    || candidate.day <= 0
+    || typeof candidate.expiresAt !== 'number'
+    || !Number.isFinite(candidate.expiresAt)
+  ) {
+    return null;
+  }
+
+  return {
+    day: candidate.day,
+    expiresAt: candidate.expiresAt,
+  };
 };
 
 const isStorageStateShape = (value: unknown): value is AppStorageState => {
@@ -97,6 +126,7 @@ export const StorageService = {
         commandHistory: normalizeCommandHistory(parsedState.commandHistory),
         guesses: normalizeGuesses(parsedState.guesses),
         apiMode: normalizeApiMode(parsedState.apiMode),
+        currentDayCache: normalizeCurrentDayCache(parsedState.currentDayCache),
       };
     } catch {
       this.clearState();
@@ -109,6 +139,7 @@ export const StorageService = {
       commandHistory: normalizeCommandHistory(state.commandHistory),
       guesses: normalizeGuesses(state.guesses),
       apiMode: normalizeApiMode(state.apiMode),
+      currentDayCache: normalizeCurrentDayCache(state.currentDayCache),
     };
 
     window.localStorage.setItem(STORAGE_KEYS.appState, JSON.stringify(normalizedState));
@@ -167,6 +198,26 @@ export const StorageService = {
     this.saveState({
       ...state,
       apiMode,
+    });
+  },
+
+  getCurrentDayCache(): CurrentDayCache | null {
+    return this.loadState().currentDayCache;
+  },
+
+  setCurrentDayCache(cache: CurrentDayCache): void {
+    const state = this.loadState();
+    this.saveState({
+      ...state,
+      currentDayCache: cache,
+    });
+  },
+
+  clearCurrentDayCache(): void {
+    const state = this.loadState();
+    this.saveState({
+      ...state,
+      currentDayCache: null,
     });
   },
 };

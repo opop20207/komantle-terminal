@@ -22,17 +22,19 @@ export type GuessError = {
 export type ApiTestResult = {
   ok: boolean;
   mode: ApiMode;
-  day: number;
+  day: number | null;
   reason?: string;
   message?: string;
 };
 
 type RealGuessPayload = Record<string, unknown>;
+type CurrentDayPayload = {
+  day: number;
+};
 
 const API_TEST_WORD = '\uC0AC\uB791';
 const REQUEST_TIMEOUT_MS = 5000;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const PUZZLE_DAY_ONE_UTC = Date.UTC(2022, 3, 1, 0, 0, 0, 0) - KST_OFFSET_MS;
 
 const createGuessError = (code: string, message: string): GuessError => ({
   code,
@@ -53,12 +55,12 @@ const createRequest = (word: string): GuessRequest => ({
   word: normalizeWord(word),
 });
 
-export const getTodayPuzzleDay = (): number => {
-  const nowKst = Date.now() + KST_OFFSET_MS;
-  const todayStartKst = Math.floor(nowKst / 86_400_000) * 86_400_000;
-  const dayOneStartKst = Math.floor((PUZZLE_DAY_ONE_UTC + KST_OFFSET_MS) / 86_400_000) * 86_400_000;
+const getNextKoreanMidnightTimestamp = (): number => {
+  const now = Date.now();
+  const nowKst = now + KST_OFFSET_MS;
+  const nextMidnightKst = (Math.floor(nowKst / 86_400_000) + 1) * 86_400_000;
 
-  return Math.max(1, Math.floor((todayStartKst - dayOneStartKst) / 86_400_000) + 1);
+  return nextMidnightKst - KST_OFFSET_MS;
 };
 
 export const isGuessError = (error: unknown): error is GuessError => {
@@ -126,6 +128,20 @@ const parseRealGuessPayload = (word: string, payload: unknown): GuessResult => {
   };
 };
 
+const parseCurrentDayPayload = (payload: unknown): CurrentDayPayload => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw createGuessError('INVALID_RESPONSE', 'invalid response');
+  }
+
+  const day = (payload as Record<string, unknown>).day;
+
+  if (typeof day !== 'number' || !Number.isInteger(day) || day <= 0) {
+    throw createGuessError('INVALID_RESPONSE', 'invalid response');
+  }
+
+  return { day };
+};
+
 const guessMock = async (word: string): Promise<GuessResult> => {
   const request = createRequest(word);
 
@@ -145,26 +161,12 @@ const guessMock = async (word: string): Promise<GuessResult> => {
   };
 };
 
-const guessReal = async (word: string): Promise<GuessResult> => {
-  const request = createRequest(word);
-
-  if (!request.word) {
-    throw createGuessError('WORD_REQUIRED', 'word is required');
-  }
-
-  const proxyBaseUrl = getProxyBaseUrl();
-
-  if (!proxyBaseUrl) {
-    throw createGuessError('PROXY_NOT_CONFIGURED', 'proxy endpoint is not configured');
-  }
-
+const fetchJson = async (url: string): Promise<unknown> => {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  const day = getTodayPuzzleDay();
-  const encodedWord = encodeURIComponent(request.word);
 
   try {
-    const response = await fetch(`${proxyBaseUrl}/guess?day=${day}&word=${encodedWord}`, {
+    const response = await fetch(url, {
       method: 'GET',
       signal: controller.signal,
     });
@@ -177,15 +179,11 @@ const guessReal = async (word: string): Promise<GuessResult> => {
       throw createGuessError('NETWORK_FAILED', 'network failed');
     }
 
-    let payload: unknown;
-
     try {
-      payload = await response.json();
+      return await response.json();
     } catch {
       throw createGuessError('INVALID_RESPONSE', 'invalid response');
     }
-
-    return parseRealGuessPayload(request.word, payload);
   } catch (error) {
     if (isGuessError(error)) {
       throw error;
@@ -199,6 +197,51 @@ const guessReal = async (word: string): Promise<GuessResult> => {
   } finally {
     window.clearTimeout(timeoutId);
   }
+};
+
+const getCurrentDay = async (): Promise<number> => {
+  const proxyBaseUrl = getProxyBaseUrl();
+
+  if (!proxyBaseUrl) {
+    throw createGuessError('PROXY_NOT_CONFIGURED', 'proxy endpoint is not configured');
+  }
+
+  const cachedDay = StorageService.getCurrentDayCache();
+
+  if (cachedDay && cachedDay.expiresAt > Date.now()) {
+    return cachedDay.day;
+  }
+
+  const payload = await fetchJson(`${proxyBaseUrl}/current-day`);
+  const { day } = parseCurrentDayPayload(payload);
+
+  StorageService.setCurrentDayCache({
+    day,
+    expiresAt: getNextKoreanMidnightTimestamp(),
+  });
+
+  return day;
+};
+
+const guessReal = async (word: string): Promise<GuessResult> => {
+  const request = createRequest(word);
+
+  if (!request.word) {
+    throw createGuessError('WORD_REQUIRED', 'word is required');
+  }
+
+  const proxyBaseUrl = getProxyBaseUrl();
+
+  if (!proxyBaseUrl) {
+    throw createGuessError('PROXY_NOT_CONFIGURED', 'proxy endpoint is not configured');
+  }
+
+  const day = await getCurrentDay();
+  const encodedWord = encodeURIComponent(request.word);
+
+  const payload = await fetchJson(`${proxyBaseUrl}/guess?day=${day}&word=${encodedWord}`);
+
+  return parseRealGuessPayload(request.word, payload);
 };
 
 const guessWithMode = async (word: string, mode: ApiMode): Promise<GuessResult> => {
@@ -230,6 +273,10 @@ const getLikelyReason = (error: unknown): string => {
     return 'proxy endpoint is not configured';
   }
 
+  if (error.code === 'CURRENT_DAY_UNAVAILABLE') {
+    return 'current day unavailable';
+  }
+
   return error.message;
 };
 
@@ -246,10 +293,15 @@ export const KomantleApi = {
     return guessWithMode(word, StorageService.getApiMode());
   },
 
+  async getCurrentDay(): Promise<number> {
+    return getCurrentDay();
+  },
+
   async testRealApi(): Promise<ApiTestResult> {
-    const day = getTodayPuzzleDay();
+    let day: number | null = null;
 
     try {
+      day = await getCurrentDay();
       await guessReal(API_TEST_WORD);
 
       return {

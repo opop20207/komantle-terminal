@@ -18,13 +18,21 @@ export const KOMANTLE_PROXY_BASE_URL = "https://komantle-proxy.your-name.workers
 The frontend will call:
 
 ```text
+{KOMANTLE_PROXY_BASE_URL}/current-day
 {KOMANTLE_PROXY_BASE_URL}/guess?day={day}&word={encodedWord}
 ```
 
 ## Frontend Behavior
 
-The terminal app no longer exposes API mode commands. Keep mock mode for normal
-frontend use unless the API integration is intentionally enabled in source code.
+The terminal app can switch API modes and inspect the official puzzle day:
+
+```text
+api       Show current API mode
+api mock  Switch to mock API mode
+api real  Switch to real API mode
+api day   Fetch and display the current official puzzle day
+```
+
 If `KOMANTLE_PROXY_BASE_URL` is empty, real API calls should not be attempted and
 the app should show:
 
@@ -38,10 +46,13 @@ Set KOMANTLE_PROXY_BASE_URL in constants.ts
 The Worker should receive:
 
 ```text
+/current-day
 /guess?day={day}&word={encodedWord}
 ```
 
-It should forward the request to the real Komantle endpoint and return JSON with
-CORS headers that allow the GitHub Pages frontend to read the response.
+For `/current-day`, it should fetch the official Komantle homepage, extract the
+current puzzle number, and return `{ "day": number }`.
 
-Worker code is intentionally not included yet.
+For `/guess`, it should forward the request to the real Komantle endpoint and
+return JSON with CORS headers that allow the GitHub Pages frontend to read the
+response.
